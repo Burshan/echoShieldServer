@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pikud Haoref Alerts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .alert-container {
+            padding: 20px;
+        }
+        .alert-header {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .alert-body {
+            font-size: 16px;
+            padding: 10px;
+            background-color: #ffcc00;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="alert-container">
+        <div class="alert-header">Currently Active Alert:</div>
+        <div class="alert-body" id="alertContent">Waiting for alerts...</div>
+    </div>
+
+    <script>
+        // Fetch the active alert from the API
+        fetch('/api/alert')
+            .then(response => response.json())
+            .then(alert => {
+                const alertContent = document.getElementById('alertContent');
+
+                if (alert.type === 'none') {
+                    alertContent.innerHTML = 'No active alert.';
+                    alertContent.style.backgroundColor = '#90ee90'; // Green for no alert
+                } else {
+                    alertContent.innerHTML = `
+                        Type: ${alert.type} <br>
+                        Cities: ${alert.cities.join(', ')} <br>
+                        Instructions: ${alert.instructions || 'No instructions available.'}
+                    `;
+                    alertContent.style.backgroundColor = '#ffcc00'; // Yellow for active alert
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching alert:', error);
+                document.getElementById('alertContent').innerText = 'Failed to fetch alert.';
+            });
+    </script>
+</body>
+</html>
