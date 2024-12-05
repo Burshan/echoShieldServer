@@ -54,7 +54,7 @@ const poll = function () {
 const sendMockAlert = () => {
     const alert = {
         type: "alert",
-        cities: ["ADA Test"]
+        cities: ["אבטליון"]
     };
     
     wss.clients.forEach(client => {
