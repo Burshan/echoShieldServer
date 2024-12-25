@@ -10,6 +10,9 @@ const wss = new WebSocket.Server({ port });
 
 console.log(`WebSocket server running on ws://localhost:${port}`);
 
+// Store connected clients
+const clients = [];
+
 // Handle new connections
 wss.on('connection', ws => {
     console.log('New connection established');
@@ -53,7 +56,7 @@ const sendMockAlert = () => {
         type: "alert",
         cities: ["אבטליון","אביאל"]
     };
-    
+    console.log('Currently active alert:', alert);    
     wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
             // Proper UTF-8 encoding
@@ -67,5 +70,3 @@ const sendMockAlert = () => {
 // Start polling
 poll();
 // setInterval(sendMockAlert, 10000);  // Send mock alert every 10 seconds
-
-
