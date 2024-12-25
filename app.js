@@ -10,9 +10,6 @@ const wss = new WebSocket.Server({ port });
 
 console.log(`WebSocket server running on ws://localhost:${port}`);
 
-// Store connected clients
-const clients = [];
-
 // Handle new connections
 wss.on('connection', ws => {
     console.log('New connection established');
@@ -70,3 +67,5 @@ const sendMockAlert = () => {
 // Start polling
 poll();
 // setInterval(sendMockAlert, 10000);  // Send mock alert every 10 seconds
+
+
