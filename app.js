@@ -65,8 +65,8 @@ const sendMockAlert = () => {
     });
 };
 
-// setInterval(sendMockAlert, 10000);
+setInterval(sendMockAlert, 10000);
 
 // Start polling
-poll();
+// poll();
 // setInterval(sendMockAlert, 10000);  // Send mock alert every 10 seconds
