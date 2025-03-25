@@ -65,7 +65,7 @@ const sendMockAlert = () => {
     });
 };
 
-setInterval(sendMockAlert, 10000);
+setInterval(sendMockAlert, 5000);
 
 // Start polling
 // poll();
