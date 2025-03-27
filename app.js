@@ -6,9 +6,11 @@ const port = process.env.PORT || 8080;
 const interval = 5000; // Polling interval
 
 // Create WebSocket server on dynamic port
-const wss = new WebSocket.Server({ port });
+const wss = new WebSocket.Server({ port, host: '0.0.0.0' });
 
-console.log(`WebSocket server running on ws://localhost:${port}`);
+console.log(`WebSocket server running on ws://0.0.0.0:${port}`);
+
+// console.log(`WebSocket server running on ws://localhost:${port}`);
 
 // Store connected clients
 const clients = [];
