@@ -70,5 +70,5 @@ const sendMockAlert = () => {
 // setInterval(sendMockAlert, 5000);
 
 // Start polling
-poll();
-// setInterval(sendMockAlert, 10000);  // Send mock alert every 10 seconds
+// poll();
+setInterval(sendMockAlert, 10000);  // Send mock alert every 10 seconds
