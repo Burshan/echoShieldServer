@@ -216,8 +216,32 @@ const sendMockAlert = () => {
     });
 };
 
+const sendEmptyAlert = () => {
+    const alert = {
+        type: "none",
+        cities: []
+    };
+
+    console.log('🚫 Empty alert sent');
+
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(Buffer.from(JSON.stringify(alert), 'utf8'));
+        }
+    });
+};
+
 // setInterval(sendMockAlert, 5000);
 
 // Start polling
 // poll();
-setInterval(sendMockAlert, 10000);  // Send mock alert every 10 seconds
+let counter = 0;
+
+setInterval(() => {
+    counter = (counter + 1) % 6; // 0 to 5
+    if (counter === 0) {
+        sendMockAlert(); // full alert every 60s
+    } else {
+        sendEmptyAlert(); // 5x empty messages
+    }
+}, 10000); // every 10 seconds
