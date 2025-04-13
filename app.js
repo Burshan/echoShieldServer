@@ -1,33 +1,57 @@
+const pikudHaoref = require('pikud-haoref-api');
+const WebSocket = require('ws');
 
-const net = require('net');
-
+// Use the environment's port or default to 8080
 const port = process.env.PORT || 8080;
+const interval = 5000; // Polling interval
+
+// Create WebSocket server on dynamic port
+const wss = new WebSocket.Server({ port, host: '0.0.0.0' });
+
+console.log(`WebSocket server running on ws://0.0.0.0:${port}`);
+
+// console.log(`WebSocket server running on ws://localhost:${port}`);
+
+// Store connected clients
 const clients = [];
 
-const server = net.createServer(socket => {
-    console.log('🔌 New TCP connection');
-    clients.push(socket);
-
-    socket.write('Welcome to the TCP server!\n');
-
-    socket.on('data', data => {
-        console.log('Received from client:', data.toString());
+// Handle new connections
+wss.on('connection', ws => {
+    console.log('New connection established');
+    clients.push(ws);
+    ws.send('Welcome to the WebSocket server!');
+    ws.on('message', message => {
+        console.log('Received:', message);
     });
-
-    socket.on('end', () => {
+    ws.on('close', () => {
+        const index = clients.indexOf(ws);
+        if (index !== -1) clients.splice(index, 1);
         console.log('Connection closed');
-        const i = clients.indexOf(socket);
-        if (i !== -1) clients.splice(i, 1);
-    });
-
-    socket.on('error', err => {
-        console.error('Socket error:', err);
     });
 });
 
-server.listen(port, '0.0.0.0', () => {
-    console.log(`🚀 TCP server running on port ${port}`);
+wss.on('error', error => {
+    console.error('Server error:', error);
 });
+
+// Function to poll for alerts
+const poll = function () {
+    const options = {
+        alertsHistoryJson: false, // Ensures the key is always present
+    };
+
+    pikudHaoref.getActiveAlert((err, alert) => {
+        setTimeout(poll, interval); // Schedule the next poll
+
+        if (err) {
+            return console.error('Error fetching alert:', err);
+        }
+
+        // Log and broadcast the alert
+        console.log('Currently active alert:', alert);
+        clients.forEach(client => client.send(JSON.stringify(alert)));
+    }, options);
+};
 
 const sendMockAlert = () => {
     const alert ={
@@ -183,10 +207,12 @@ const sendMockAlert = () => {
         ],
         "instructions": "היכנסו למרחב המוגן ושהו בו 10 דקות"
       };
-    const message = JSON.stringify(alert);
-    console.log("📣 Sending alert");
-    clients.forEach(client => {
-        client.write(message + '\n');
+    console.log('Currently active alert:', alert);    
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            // Proper UTF-8 encoding
+            client.send(Buffer.from(JSON.stringify(alert), 'utf8'));
+        }
     });
 };
 
@@ -195,14 +221,22 @@ const sendEmptyAlert = () => {
         type: "none",
         cities: []
     };
-    const message = JSON.stringify(alert);
-    console.log("🚫 Sending empty alert");
-    clients.forEach(client => {
-        client.write(message + '\n');
+
+    console.log('🚫 Empty alert sent');
+
+    wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(Buffer.from(JSON.stringify(alert), 'utf8'));
+        }
     });
 };
 
+// setInterval(sendMockAlert, 5000);
+
+// Start polling
+// poll();
 let counter = 0;
+
 setInterval(() => {
     counter = (counter + 1) % 6; // 0 to 5
     if (counter === 0) {
@@ -210,6 +244,7 @@ setInterval(() => {
     } else {
         sendEmptyAlert(); // 5x empty messages
     }
-}, 10000);    
-    
- 
+}, 10000); // every 10 seconds
+
+
+
