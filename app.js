@@ -1,74 +1,43 @@
-const pikudHaoref = require('pikud-haoref-api');
 const WebSocket = require('ws');
+const fs = require('fs');
 
-// Use the environment's port or default to 8080
-const port = process.env.PORT || 8080;
-const interval = 5000; // Polling interval
-
-// Create WebSocket server on dynamic port
+const port = 8080;
 const wss = new WebSocket.Server({ port, host: '0.0.0.0' });
 
-console.log(`WebSocket server running on ws://0.0.0.0:${port}`);
+console.log(`📡 Mock server on ws://localhost:${port}`);
 
-// console.log(`WebSocket server running on ws://localhost:${port}`);
+let clients = [];
+let counter = 0;
+const mockEveryN = 10; // send real alert every N messages
 
-// Store connected clients
-const clients = [];
-
-// Handle new connections
-wss.on('connection', ws => {
-    console.log('New connection established');
+wss.on('connection', (ws) => {
+    console.log('👥 New client connected');
     clients.push(ws);
-    ws.send('Welcome to the WebSocket server!');
-    ws.on('message', message => {
-        console.log('Received:', message);
-    });
+
+    ws.send('Welcome to EchoShield Test Server');
+
     ws.on('close', () => {
-        const index = clients.indexOf(ws);
-        if (index !== -1) clients.splice(index, 1);
-        console.log('Connection closed');
+        clients = clients.filter(client => client !== ws);
+        console.log('❌ Client disconnected');
     });
 });
 
-wss.on('error', error => {
-    console.error('Server error:', error);
-});
+// Load mock alert once from file
+const mockAlert = JSON.parse(fs.readFileSync('yemen.json', 'utf8'));
 
-// Function to poll for alerts
-const poll = function () {
-    const options = {
-        alertsHistoryJson: false, // Ensures the key is always present
-    };
+// Broadcast every 5 seconds
+setInterval(() => {
+    counter++;
 
-    pikudHaoref.getActiveAlert((err, alert) => {
-        setTimeout(poll, interval); // Schedule the next poll
+    const message = (counter % mockEveryN === 0)
+        ? mockAlert
+        : { type: "none", cities: [] };
 
-        if (err) {
-            return console.error('Error fetching alert:', err);
-        }
-
-        // Log and broadcast the alert
-        console.log('Currently active alert:', alert);
-        clients.forEach(client => client.send(JSON.stringify(alert)));
-    }, options);
-};
-
-const sendMockAlert = () => {
-    const alert = {
-        type: "alert",
-        cities: ["אבטליון","אביאל"]
-    };
-    console.log('Currently active alert:', alert);    
-    wss.clients.forEach(client => {
+    clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-            // Proper UTF-8 encoding
-            client.send(Buffer.from(JSON.stringify(alert), 'utf8'));
+            client.send(JSON.stringify(message));
         }
     });
-};
 
-// setInterval(sendMockAlert, 5000);
-
-// Start polling
-// poll();
-setInterval(sendMockAlert, 10000);  // Send mock alert every 10 seconds
+    console.log(`📤 Sent ${message.type} (${counter})`);
+}, 5000);
